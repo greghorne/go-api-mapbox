@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	// "strconv"
 	"strings"
-	"fmt"
+	// "fmt"
 )
 
 
@@ -53,7 +53,6 @@ func v1DoMapboxIsochrone(sxLng string, syLat string, sTime string, sToken string
 
 
 	mapbox_url := "https://api.mapbox.com/isochrone/v1/mapbox/driving/" + sxLng + "," + syLat + "?contours_minutes=" + sTime + "&polygons=true&access_token=" + sToken
-	fmt.Println(mapbox_url)
 
 	startSearchText := "\"geometry\":{\"coordinates\":"
 	endSearchText   := ",\"type\":\"Polygon\""
@@ -73,12 +72,19 @@ func v1DoMapboxIsochrone(sxLng string, syLat string, sTime string, sToken string
 
 		jsonText := string(body)
 
-		nStart   := strings.Index(jsonText, startSearchText) + len(startSearchText)
-		nEnd     := strings.Index(jsonText, endSearchText)
-		fmt.Println(nStart, nEnd)
+		nStart := strings.Index(jsonText, startSearchText) + len(startSearchText)
+		nEnd   := strings.Index(jsonText, endSearchText)
+		data   := jsonText[nStart:nEnd]
 
-		fmt.Println(jsonText[nStart:nEnd])
-		geojson = jsonText[nStart:nEnd]
+		x := strings.Split(data, ",")
+		var s []string
+		
+		for n := 0; n < len(x); n+=2 {
+			s = append(s, strings.Replace("[" + strings.Replace(x[n+1], "[", "", -1), "]", "", -1) + "," + strings.Replace(strings.Replace(x[n], "[", "", -1), "]", "", -1) + "]")
+		}
+
+		geojson = "[" + strings.Join(s, ",") + "]"
+
 	} 
 
 	return
