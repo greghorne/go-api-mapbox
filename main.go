@@ -18,22 +18,22 @@ import (
 func main() {
 
 	router := mux.NewRouter()
-	router.HandleFunc("/v1/mapbox-isochrone/{lng}/{lat}/{time}/{appid}/{appcode}", v1HereIsochrone).Methods("GET")
-	log.Fatal(http.ListenAndServe(":8003", router))
+	router.HandleFunc("/v1/mapbox-isochrone/{lng}/{lat}/{time}/{token}", v1MapboxIsochrone).Methods("GET")
+	log.Fatal(http.ListenAndServe(":8004", router))
 
 }
 // ============================================================
 
 
 // ============================================================
-func v1HereIsochrone (w http.ResponseWriter, r *http.Request) {
+func v1MapboxIsochrone (w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 
 	var jsonResult map[string]string
 
-	if isochrone, msg := v1DoHereIsochrone(params["lng"], params["lat"], params["time"], params["appid"], params["appcode"]); msg == "" {
-		jsonResult = map[string]string{"here": isochrone}
+	if isochrone, msg := v1DoMapboxIsochrone(params["lng"], params["lat"], params["time"], params["token"]); msg == "" {
+		jsonResult = map[string]string{"mapbox": isochrone}
 	} else {
 		jsonResult = map[string]string{"intersects": ""}
 	}
@@ -47,20 +47,21 @@ func v1HereIsochrone (w http.ResponseWriter, r *http.Request) {
 
 
 // ============================================================
-func v1DoHereIsochrone(sxLng string, syLat string, sTime string, sAppID string, sAppCode string) (geojson string, msg string) {
+func v1DoMapboxIsochrone(sxLng string, syLat string, sTime string, sToken string) (geojson string, msg string) {
 
-	https://api.mapbox.com/isochrone/v1/mapbox/driving/-97,36?contours_minutes=3&polygons=true&access_token=
+	// https://api.mapbox.com/isochrone/v1/mapbox/driving/-97,36?contours_minutes=3&polygons=true&access_token=
 
-	here_url := "https://api.mapbox.com/isochrone/v1/mapbox/driving/" + sxLng + "," + syLat + "?contours_minutes=" + sTime + "&polygons=true&access_token=" sToken
-fmt.Println(here_url
-)
-	startSearchText := "[{id:0,shape:"
-	endSearchText   := "}]}],start:"
+
+	mapbox_url := "https://api.mapbox.com/isochrone/v1/mapbox/driving/" + sxLng + "," + syLat + "?contours_minutes=" + sTime + "&polygons=true&access_token=" + sToken
+	fmt.Println(mapbox_url)
+
+	startSearchText := "\"geometry\":{\"coordinates\":"
+	endSearchText   := ",\"type\":\"Polygon\""
 
 	geojson = ""
 	msg     = ""
 
-	response, err := http.Get(here_url)
+	response, err := http.Get(mapbox_url)
 	if err == nil {
 		defer response.Body.Close()
 
@@ -70,27 +71,14 @@ fmt.Println(here_url
 			msg     = err.Error()
 		} 
 
-		jsonText := strings.Replace(string(body), "\"", "", -1)
+		jsonText := string(body)
 
 		nStart   := strings.Index(jsonText, startSearchText) + len(startSearchText)
 		nEnd     := strings.Index(jsonText, endSearchText)
+		fmt.Println(nStart, nEnd)
 
-		x := strings.Split(jsonText[nStart:nEnd], ",")
-
-		var s []string
-		for n := 0; n < len(x); n+=2 {
-			
-			switch num := n; num {
-				case 0:
-					s = append(s, (x[n] + "," + x[n+1] +"],"))
-				case len(x) - 2:
-					s = append(s, ("[" + x[n] + "," + x[n+1]))
-				default:
-					s = append(s, "[" + (x[n] + "," + x[n+1]) + "],")
-			}
-		}
-
-		geojson = strings.Join(s, "")
+		fmt.Println(jsonText[nStart:nEnd])
+		geojson = jsonText[nStart:nEnd]
 	} 
 
 	return
