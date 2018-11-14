@@ -33,7 +33,7 @@ func v1MapboxIsochrone (w http.ResponseWriter, r *http.Request) {
 	if isochrone, msg := v1DoMapboxIsochrone(params["lng"], params["lat"], params["time"], params["token"]); msg == "" {
 		jsonResult = map[string]string{"mapbox": isochrone}
 	} else {
-		jsonResult = map[string]string{"intersects": ""}
+		jsonResult = map[string]string{"mapbox": msg}
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
