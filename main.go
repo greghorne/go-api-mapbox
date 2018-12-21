@@ -47,9 +47,6 @@ func v1MapboxIsochrone (w http.ResponseWriter, r *http.Request) {
 // ============================================================
 func v1DoMapboxIsochrone(sxLng string, syLat string, sTime string, sToken string) (geojson string, msg string) {
 
-	// https://api.mapbox.com/isochrone/v1/mapbox/driving/-97,36?contours_minutes=3&polygons=true&access_token=
-
-
 	mapbox_url := "https://api.mapbox.com/isochrone/v1/mapbox/driving/" + sxLng + "," + syLat + "?contours_minutes=" + sTime + "&polygons=true&access_token=" + sToken
 
 	startSearchText := "\"geometry\":{\"coordinates\":"
